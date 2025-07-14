@@ -101,7 +101,8 @@ client.on(Events.InteractionCreate, async interaction => {
           chain_id: chain_id,
           language: langue,
           guild_id: interaction.guildId,
-          user_id: interaction.user.id
+          user_id: interaction.user.id,
+          channel_id: interaction.channelId
         })
       });
     }
