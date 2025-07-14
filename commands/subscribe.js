@@ -13,8 +13,9 @@ module.exports = {
     });
 
     const userId = interaction.user.id;
-    const guildId = interaction.guild.id;
+    const guildId = interaction.guild ? interaction.guild.id : null;
 
+    // webhook Make reçoit user_id et guild_id ou null si DM
     const webhookUrl = 'https://hook.eu2.make.com/r23ipqjuvlxqoqn2m76qd6t6rn729tr4';
 
     try {
@@ -28,6 +29,10 @@ module.exports = {
       });
     } catch (err) {
       console.error('❌ Erreur webhook Make:', err);
+      return interaction.editReply({
+        content: '❌ Erreur interne, merci de réessayer plus tard.',
+        ephemeral: true
+      });
     }
   },
 };
