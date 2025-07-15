@@ -8,7 +8,9 @@ const fs = require('fs');
 const fetch = require('node-fetch');
 const WEBHOOK_SECRET_TOKEN = process.env.WEBHOOK_SECRET_TOKEN;
 
-const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers] });
+const client = new Client({
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers]
+});
 client.commands = new Collection();
 
 // Chargement des commandes
@@ -24,11 +26,12 @@ client.once(Events.ClientReady, () => {
 
 client.on(Events.InteractionCreate, async interaction => {
   try {
-    // Slash command (/analyse ou /subscribe)
+    // Slash command (/analyse, /subscribe, etc.)
     if (interaction.isChatInputCommand()) {
       const command = client.commands.get(interaction.commandName);
       if (!command) return;
       await command.execute(interaction);
+      return;
     }
 
     // Bouton "Ouvrir le formulaire"
@@ -76,17 +79,6 @@ client.on(Events.InteractionCreate, async interaction => {
 
     // Bouton "S’abonner"
     if (interaction.isButton() && interaction.customId === 'subscribe_button') {
-      const userId = interaction.user.id;
-      const guildId = interaction.guild?.id || null;
-
-      const webhookUrl = ''; // à remplir
-
-      await fetch.default(webhookUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user_id: userId, guild_id: guildId })
-      });
-
       await interaction.reply({
         content: `🧠 Génération du lien d’abonnement... regarde tes MP dans quelques secondes.`,
         flags: 64
@@ -94,8 +86,11 @@ client.on(Events.InteractionCreate, async interaction => {
       return;
     }
 
-    // Formulaire envoyé
-    if (interaction.type === InteractionType.ModalSubmit && interaction.customId.startsWith('analyse_form')) {
+    // Soumission du formulaire d’analyse
+    if (
+      interaction.type === InteractionType.ModalSubmit &&
+      interaction.customId.startsWith('analyse_form')
+    ) {
       await interaction.deferReply({ ephemeral: true });
 
       const langue = interaction.customId.split(':')[1] || 'fr';
@@ -112,10 +107,9 @@ client.on(Events.InteractionCreate, async interaction => {
       if (interaction.guild) {
         const member = await interaction.guild.members.fetch(interaction.user.id);
         roles = member.roles.cache.map(role => role.name);
-        hasScoRageRole = roles.includes("ScoRage");
+        hasScoRageRole = roles.includes('ScoRage');
       } else {
-        // En DM, on autorise par défaut
-        hasScoRageRole = true;
+        hasScoRageRole = true; // Autorisé en DM
       }
 
       if (!hasScoRageRole) {
