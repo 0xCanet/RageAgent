@@ -7,7 +7,7 @@ const {
 const fs = require('fs');
 const fetch = require('node-fetch');
 
-const client = new Client({ intents: [GatewayIntentBits.Guilds] });
+const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers] });
 client.commands = new Collection();
 
 // Chargement des commandes
@@ -102,9 +102,28 @@ client.on(Events.InteractionCreate, async interaction => {
       const url = interaction.fields.getTextInputValue('project_url');
       const whitepaper = interaction.fields.getTextInputValue('whitepaper_url');
       const address = interaction.fields.getTextInputValue('contract_address');
-
       const chain_id = 1; // Ethereum par défaut
 
+      // 🔐 Récupération des rôles de l'utilisateur
+      let roles = [];
+      let hasScoRageRole = false;
+
+      if (interaction.guild) {
+        const member = await interaction.guild.members.fetch(interaction.user.id);
+        roles = member.roles.cache.map(role => role.name);
+        hasScoRageRole = roles.includes("ScoRage");
+      }
+
+      // 🔒 Si pas de rôle ScoRage, on bloque
+      if (!hasScoRageRole) {
+        await interaction.reply({
+          content: `❌ Tu dois avoir le rôle **ScoRage** pour utiliser cette fonctionnalité.\n\nUtilise la commande \`/subscription\` ou contacte un admin.`,
+          ephemeral: true
+        });
+        return;
+      }
+
+      // ✅ On continue si autorisé
       await interaction.reply({
         content: `🧠 Analyse en cours pour **${name}**...`,
         flags: 64 // éphémère
@@ -123,7 +142,8 @@ client.on(Events.InteractionCreate, async interaction => {
           language: langue,
           guild_id: interaction.guildId,
           user_id: interaction.user.id,
-          channel_id: interaction.channelId
+          channel_id: interaction.channelId,
+          user_roles: roles
         })
       });
     }
@@ -138,7 +158,7 @@ client.on(Events.InteractionCreate, async interaction => {
   }
 });
 
-// 🔁 Fonction réutilisable pour message d’erreur "Pas d’abonnement"
+// 🔁 Message réutilisable "Pas d’abonnement"
 async function sendSubscriptionPrompt(interaction) {
   await interaction.reply({
     content: `❌ Tu n’as pas encore d’abonnement actif à RageAgent.\n\n🔥 Pour débloquer l’analyse complète ScoRage™, clique ci-dessous :`,
