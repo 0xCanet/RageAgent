@@ -1,4 +1,4 @@
-const { SlashCommandBuilder } = require('discord.js');
+const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -13,25 +13,21 @@ module.exports = {
           { name: 'English', value: 'en' }
         )
     ),
+
   async execute(interaction) {
     const langue = interaction.options.getString('langue');
 
-    const bouton = {
-      type: 1,
-      components: [
-        {
-          type: 2,
-          style: 1,
-          label: '📝 Remplir le formulaire',
-          custom_id: `open_analyse_modal:${langue}`
-        }
-      ]
-    };
+    const bouton = new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId(`open_analyse_modal:${langue}`)
+        .setLabel('📝 Remplir le formulaire')
+        .setStyle(ButtonStyle.Primary)
+    );
 
     await interaction.reply({
       content: `Langue choisie : **${langue}**\nClique sur le bouton ci-dessous pour remplir le formulaire.`,
       components: [bouton],
-      ephemeral: true
+      flags: 64 // équivalent à ephemeral: true, mais sans warning
     });
   }
 };
