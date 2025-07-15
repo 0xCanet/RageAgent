@@ -101,6 +101,11 @@ client.on(Events.InteractionCreate, async interaction => {
       const address = interaction.fields.getTextInputValue('contract_address');
       const chain_id = 1;
 
+      console.log("📨 Formulaire reçu:", {
+  name, url, whitepaper, address, langue, user: interaction.user.id
+});
+
+
       let roles = [];
       let hasScoRageRole = false;
 
@@ -121,6 +126,19 @@ client.on(Events.InteractionCreate, async interaction => {
       }
 
       const webhookURL = 'https://hook.eu2.make.com/v5cjhvkqc3q916sxesbnkiyr9f6qvnjr';
+      console.log("🚀 Envoi à Make:", {
+  project_name: name,
+  project_url: url,
+  whitepaper_url: whitepaper,
+  contract_address: address,
+  chain_id,
+  language: langue,
+  guild_id: interaction.guildId,
+  user_id: interaction.user.id,
+  channel_id: interaction.channelId,
+  user_roles: roles
+});
+
       await fetch.default(webhookURL, {
         method: 'POST',
         headers: {
@@ -141,13 +159,19 @@ client.on(Events.InteractionCreate, async interaction => {
         })
       });
 
+      console.log("✅ Réponse Make:", res.status, await res.text());
+
       await interaction.editReply({
         content: `🧠 Analyse en cours pour **${name}**...`
       });
     }
 
   } catch (err) {
-    console.error("❌ Erreur interaction :", err);
+    console.error("❌ Erreur interaction :", {
+  message: err.message,
+  stack: err.stack
+});
+
     if (interaction.replied || interaction.deferred) {
       await interaction.followUp({ content: 'Erreur interne.', flags: 64 });
     } else {
