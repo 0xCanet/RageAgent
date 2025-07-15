@@ -39,35 +39,35 @@ client.on(Events.InteractionCreate, async interaction => {
         .setCustomId(`analyse_form:${langue}`)
         .setTitle('Formulaire d\'analyse');
 
-      const nameInput = new TextInputBuilder()
-        .setCustomId('project_name')
-        .setLabel('Nom du projet')
-        .setStyle(TextInputStyle.Short)
-        .setRequired(true);
-
-      const urlInput = new TextInputBuilder()
-        .setCustomId('project_url')
-        .setLabel('Site Web')
-        .setStyle(TextInputStyle.Short)
-        .setRequired(true);
-
-      const whitepaperInput = new TextInputBuilder()
-        .setCustomId('whitepaper_url')
-        .setLabel('Whitepaper (URL de téléchargement uniquement)')
-        .setStyle(TextInputStyle.Short)
-        .setRequired(false);
-
-      const addressInput = new TextInputBuilder()
-        .setCustomId('contract_address')
-        .setLabel('Adresse du contrat')
-        .setStyle(TextInputStyle.Short)
-        .setRequired(false);
-
       modal.addComponents(
-        new ActionRowBuilder().addComponents(nameInput),
-        new ActionRowBuilder().addComponents(urlInput),
-        new ActionRowBuilder().addComponents(whitepaperInput),
-        new ActionRowBuilder().addComponents(addressInput)
+        new ActionRowBuilder().addComponents(
+          new TextInputBuilder()
+            .setCustomId('project_name')
+            .setLabel('Nom du projet')
+            .setStyle(TextInputStyle.Short)
+            .setRequired(true)
+        ),
+        new ActionRowBuilder().addComponents(
+          new TextInputBuilder()
+            .setCustomId('project_url')
+            .setLabel('Site Web')
+            .setStyle(TextInputStyle.Short)
+            .setRequired(true)
+        ),
+        new ActionRowBuilder().addComponents(
+          new TextInputBuilder()
+            .setCustomId('whitepaper_url')
+            .setLabel('Whitepaper (URL de téléchargement uniquement)')
+            .setStyle(TextInputStyle.Short)
+            .setRequired(false)
+        ),
+        new ActionRowBuilder().addComponents(
+          new TextInputBuilder()
+            .setCustomId('contract_address')
+            .setLabel('Adresse du contrat')
+            .setStyle(TextInputStyle.Short)
+            .setRequired(false)
+        )
       );
 
       await interaction.showModal(modal);
@@ -77,17 +77,14 @@ client.on(Events.InteractionCreate, async interaction => {
     // Bouton "S’abonner"
     if (interaction.isButton() && interaction.customId === 'subscribe_button') {
       const userId = interaction.user.id;
-      const guildId = interaction.guild.id;
+      const guildId = interaction.guild?.id || null;
 
-      const webhookUrl = ''; // url webhook make
+      const webhookUrl = ''; // à remplir
 
       await fetch.default(webhookUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          user_id: userId,
-          guild_id: guildId
-        })
+        body: JSON.stringify({ user_id: userId, guild_id: guildId })
       });
 
       await interaction.reply({
@@ -99,15 +96,16 @@ client.on(Events.InteractionCreate, async interaction => {
 
     // Formulaire envoyé
     if (interaction.type === InteractionType.ModalSubmit && interaction.customId.startsWith('analyse_form')) {
+      await interaction.deferReply({ ephemeral: true });
+
       const langue = interaction.customId.split(':')[1] || 'fr';
 
       const name = interaction.fields.getTextInputValue('project_name');
       const url = interaction.fields.getTextInputValue('project_url');
       const whitepaper = interaction.fields.getTextInputValue('whitepaper_url');
       const address = interaction.fields.getTextInputValue('contract_address');
-      const chain_id = 1; // Ethereum par défaut
+      const chain_id = 1;
 
-      // 🔐 Récupération des rôles de l'utilisateur
       let roles = [];
       let hasScoRageRole = false;
 
@@ -115,32 +113,32 @@ client.on(Events.InteractionCreate, async interaction => {
         const member = await interaction.guild.members.fetch(interaction.user.id);
         roles = member.roles.cache.map(role => role.name);
         hasScoRageRole = roles.includes("ScoRage");
+      } else {
+        // En DM, on autorise par défaut
+        hasScoRageRole = true;
       }
 
       if (!hasScoRageRole) {
-        await interaction.reply({
+        await interaction.editReply({
           content: `❌ Tu dois avoir le rôle **ScoRage** pour utiliser cette fonctionnalité.\n\nUtilise la commande \`/subscribe\` ou contacte un admin.`,
           flags: 64
         });
         return;
       }
 
-      // ✅ On defer immédiatement pour éviter timeout
-      await interaction.deferReply({ ephemeral: true });
-
-      const webhookURL = 'https://hook.eu2.make.com/v5cjhvkqc3q916sxesbnkiyr9f6qvnjr'; // à adapter
+      const webhookURL = 'https://hook.eu2.make.com/v5cjhvkqc3q916sxesbnkiyr9f6qvnjr';
       await fetch.default(webhookURL, {
         method: 'POST',
         headers: {
-    'Content-Type': 'application/json',
-    'X-RAGE-TOKEN': WEBHOOK_SECRET_TOKEN
-  },
+          'Content-Type': 'application/json',
+          'X-RAGE-TOKEN': WEBHOOK_SECRET_TOKEN
+        },
         body: JSON.stringify({
           project_name: name,
           project_url: url,
           whitepaper_url: whitepaper,
           contract_address: address,
-          chain_id: chain_id,
+          chain_id,
           language: langue,
           guild_id: interaction.guildId,
           user_id: interaction.user.id,
