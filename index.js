@@ -69,7 +69,6 @@ client.on(Events.InteractionCreate, async interaction => {
         new ActionRowBuilder().addComponents(addressInput)
       );
 
-      // ❌ NE PAS faire de reply ici
       await interaction.showModal(modal);
       return;
     }
@@ -117,7 +116,6 @@ client.on(Events.InteractionCreate, async interaction => {
         hasScoRageRole = roles.includes("ScoRage");
       }
 
-      // 🔒 Si pas de rôle ScoRage, on bloque
       if (!hasScoRageRole) {
         await interaction.reply({
           content: `❌ Tu dois avoir le rôle **ScoRage** pour utiliser cette fonctionnalité.\n\nUtilise la commande \`/subscribe\` ou contacte un admin.`,
@@ -126,11 +124,8 @@ client.on(Events.InteractionCreate, async interaction => {
         return;
       }
 
-      // ✅ On continue si autorisé
-      await interaction.reply({
-        content: `🧠 Analyse en cours pour **${name}**...`,
-        flags: 64
-      });
+      // ✅ On defer immédiatement pour éviter timeout
+      await interaction.deferReply({ ephemeral: true });
 
       const webhookURL = 'https://hook.eu2.make.com/v5cjhvkqc3q916sxesbnkiyr9f6qvnjr'; // à adapter
       await fetch.default(webhookURL, {
@@ -149,6 +144,10 @@ client.on(Events.InteractionCreate, async interaction => {
           user_roles: roles
         })
       });
+
+      await interaction.editReply({
+        content: `🧠 Analyse en cours pour **${name}**...`
+      });
     }
 
   } catch (err) {
@@ -160,21 +159,5 @@ client.on(Events.InteractionCreate, async interaction => {
     }
   }
 });
-
-// 🔁 Message réutilisable "Pas d’abonnement"
-async function sendSubscriptionPrompt(interaction) {
-  await interaction.reply({
-    content: `❌ Tu n’as pas encore d’abonnement actif à ScoRage.\n\n🔥 Pour débloquer l’analyse complète ScoRage™, clique ci-dessous :`,
-    components: [
-      new ActionRowBuilder().addComponents(
-        new ButtonBuilder()
-          .setCustomId('subscribe_button')
-          .setLabel('🧠 S’abonner')
-          .setStyle(ButtonStyle.Primary)
-      )
-    ],
-    flags: 64
-  });
-}
 
 client.login(process.env.DISCORD_TOKEN);
