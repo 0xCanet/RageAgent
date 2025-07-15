@@ -69,7 +69,9 @@ client.on(Events.InteractionCreate, async interaction => {
         new ActionRowBuilder().addComponents(addressInput)
       );
 
+      // ❌ NE PAS faire de reply ici
       await interaction.showModal(modal);
+      return;
     }
 
     // Bouton "S’abonner"
@@ -90,8 +92,9 @@ client.on(Events.InteractionCreate, async interaction => {
 
       await interaction.reply({
         content: `🧠 Génération du lien d’abonnement... regarde tes MP dans quelques secondes.`,
-        ephemeral: true
+        flags: 64
       });
+      return;
     }
 
     // Formulaire envoyé
@@ -118,7 +121,7 @@ client.on(Events.InteractionCreate, async interaction => {
       if (!hasScoRageRole) {
         await interaction.reply({
           content: `❌ Tu dois avoir le rôle **ScoRage** pour utiliser cette fonctionnalité.\n\nUtilise la commande \`/subscription\` ou contacte un admin.`,
-          ephemeral: true
+          flags: 64
         });
         return;
       }
@@ -126,7 +129,7 @@ client.on(Events.InteractionCreate, async interaction => {
       // ✅ On continue si autorisé
       await interaction.reply({
         content: `🧠 Analyse en cours pour **${name}**...`,
-        flags: 64 // éphémère
+        flags: 64
       });
 
       const webhookURL = 'https://hook.eu2.make.com/v5cjhvkqc3q916sxesbnkiyr9f6qvnjr'; // à adapter
@@ -151,9 +154,9 @@ client.on(Events.InteractionCreate, async interaction => {
   } catch (err) {
     console.error("❌ Erreur interaction :", err);
     if (interaction.replied || interaction.deferred) {
-      await interaction.followUp({ content: 'Erreur interne.', ephemeral: true });
+      await interaction.followUp({ content: 'Erreur interne.', flags: 64 });
     } else {
-      await interaction.reply({ content: 'Erreur interne.', ephemeral: true });
+      await interaction.reply({ content: 'Erreur interne.', flags: 64 });
     }
   }
 });
@@ -170,7 +173,7 @@ async function sendSubscriptionPrompt(interaction) {
           .setStyle(ButtonStyle.Primary)
       )
     ],
-    ephemeral: true
+    flags: 64
   });
 }
 
