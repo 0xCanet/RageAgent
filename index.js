@@ -131,7 +131,7 @@ client.on(Events.InteractionCreate, async interaction => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-RAGE-TOKEN': WEBHOOK_SECRET_TOKEN
+          'x-make-api-key': WEBHOOK_SECRET_TOKEN
         },
         body: JSON.stringify({
           project_name: name,
