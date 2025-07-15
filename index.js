@@ -164,7 +164,7 @@ client.on(Events.InteractionCreate, async interaction => {
 // 🔁 Message réutilisable "Pas d’abonnement"
 async function sendSubscriptionPrompt(interaction) {
   await interaction.reply({
-    content: `❌ Tu n’as pas encore d’abonnement actif à RageAgent.\n\n🔥 Pour débloquer l’analyse complète ScoRage™, clique ci-dessous :`,
+    content: `❌ Tu n’as pas encore d’abonnement actif à ScoRage.\n\n🔥 Pour débloquer l’analyse complète ScoRage™, clique ci-dessous :`,
     components: [
       new ActionRowBuilder().addComponents(
         new ButtonBuilder()
