@@ -120,7 +120,7 @@ client.on(Events.InteractionCreate, async interaction => {
       // 🔒 Si pas de rôle ScoRage, on bloque
       if (!hasScoRageRole) {
         await interaction.reply({
-          content: `❌ Tu dois avoir le rôle **ScoRage** pour utiliser cette fonctionnalité.\n\nUtilise la commande \`/subscription\` ou contacte un admin.`,
+          content: `❌ Tu dois avoir le rôle **ScoRage** pour utiliser cette fonctionnalité.\n\nUtilise la commande \`/subscribe\` ou contacte un admin.`,
           flags: 64
         });
         return;
