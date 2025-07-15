@@ -6,6 +6,7 @@ const {
 } = require('discord.js');
 const fs = require('fs');
 const fetch = require('node-fetch');
+const WEBHOOK_SECRET_TOKEN = process.env.WEBHOOK_SECRET_TOKEN;
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers] });
 client.commands = new Collection();
@@ -78,7 +79,7 @@ client.on(Events.InteractionCreate, async interaction => {
       const userId = interaction.user.id;
       const guildId = interaction.guild.id;
 
-      const webhookUrl = 'https://hook.make.com/TON_WEBHOOK_ID'; // Remplace par ton URL Make
+      const webhookUrl = ''; // url webhook make
 
       await fetch.default(webhookUrl, {
         method: 'POST',
@@ -130,7 +131,10 @@ client.on(Events.InteractionCreate, async interaction => {
       const webhookURL = 'https://hook.eu2.make.com/v5cjhvkqc3q916sxesbnkiyr9f6qvnjr'; // à adapter
       await fetch.default(webhookURL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+    'Content-Type': 'application/json',
+    'X-RAGE-TOKEN': WEBHOOK_SECRET_TOKEN
+  },
         body: JSON.stringify({
           project_name: name,
           project_url: url,
