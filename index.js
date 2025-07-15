@@ -158,7 +158,7 @@ client.on(Events.InteractionCreate, async interaction => {
           user_roles: roles
         })
       });
-
+      const responseText = await res.text();
       console.log("✅ Réponse Make:", res.status, await res.text());
 
       await interaction.editReply({
