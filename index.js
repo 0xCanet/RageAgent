@@ -2,15 +2,16 @@ require('dotenv').config();
 const {
   Client, Collection, GatewayIntentBits, Events,
   ModalBuilder, TextInputBuilder, TextInputStyle,
-  ActionRowBuilder, ButtonBuilder, ButtonStyle, InteractionType
+  ActionRowBuilder, InteractionType
 } = require('discord.js');
 const fs = require('fs');
 const fetch = require('node-fetch');
-const WEBHOOK_SECRET_TOKEN = process.env.WEBHOOK_SECRET_TOKEN;
 
+const WEBHOOK_SECRET_TOKEN = process.env.WEBHOOK_SECRET_TOKEN;
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers]
 });
+
 client.commands = new Collection();
 
 // Chargement des commandes
@@ -26,7 +27,7 @@ client.once(Events.ClientReady, () => {
 
 client.on(Events.InteractionCreate, async interaction => {
   try {
-    // Slash command (/analyse, /subscribe, etc.)
+    // Slash command
     if (interaction.isChatInputCommand()) {
       const command = client.commands.get(interaction.commandName);
       if (!command) return;
@@ -34,50 +35,49 @@ client.on(Events.InteractionCreate, async interaction => {
       return;
     }
 
-    // Bouton "Ouvrir le formulaire"
+    // Bouton "ouvrir le formulaire"
     if (interaction.isButton() && interaction.customId.startsWith('open_analyse_modal')) {
       const langue = interaction.customId.split(':')[1] || 'fr';
 
       const modal = new ModalBuilder()
         .setCustomId(`analyse_form:${langue}`)
-        .setTitle('Formulaire d\'analyse');
-
-      modal.addComponents(
-        new ActionRowBuilder().addComponents(
-          new TextInputBuilder()
-            .setCustomId('project_name')
-            .setLabel('Nom du projet')
-            .setStyle(TextInputStyle.Short)
-            .setRequired(true)
-        ),
-        new ActionRowBuilder().addComponents(
-          new TextInputBuilder()
-            .setCustomId('project_url')
-            .setLabel('Site Web')
-            .setStyle(TextInputStyle.Short)
-            .setRequired(true)
-        ),
-        new ActionRowBuilder().addComponents(
-          new TextInputBuilder()
-            .setCustomId('whitepaper_url')
-            .setLabel('Whitepaper (URL de téléchargement uniquement)')
-            .setStyle(TextInputStyle.Short)
-            .setRequired(false)
-        ),
-        new ActionRowBuilder().addComponents(
-          new TextInputBuilder()
-            .setCustomId('contract_address')
-            .setLabel('Adresse du contrat')
-            .setStyle(TextInputStyle.Short)
-            .setRequired(false)
-        )
-      );
+        .setTitle('Formulaire d\'analyse')
+        .addComponents(
+          new ActionRowBuilder().addComponents(
+            new TextInputBuilder()
+              .setCustomId('project_name')
+              .setLabel('Nom du projet')
+              .setStyle(TextInputStyle.Short)
+              .setRequired(true)
+          ),
+          new ActionRowBuilder().addComponents(
+            new TextInputBuilder()
+              .setCustomId('project_url')
+              .setLabel('Site Web')
+              .setStyle(TextInputStyle.Short)
+              .setRequired(true)
+          ),
+          new ActionRowBuilder().addComponents(
+            new TextInputBuilder()
+              .setCustomId('whitepaper_url')
+              .setLabel('Whitepaper (URL de téléchargement uniquement)')
+              .setStyle(TextInputStyle.Short)
+              .setRequired(false)
+          ),
+          new ActionRowBuilder().addComponents(
+            new TextInputBuilder()
+              .setCustomId('contract_address')
+              .setLabel('Adresse du contrat')
+              .setStyle(TextInputStyle.Short)
+              .setRequired(false)
+          )
+        );
 
       await interaction.showModal(modal);
       return;
     }
 
-    // Bouton "S’abonner"
+    // Bouton abonnement
     if (interaction.isButton() && interaction.customId === 'subscribe_button') {
       await interaction.reply({
         content: `🧠 Génération du lien d’abonnement... regarde tes MP dans quelques secondes.`,
@@ -86,7 +86,7 @@ client.on(Events.InteractionCreate, async interaction => {
       return;
     }
 
-    // Soumission du formulaire d’analyse
+    // Soumission du formulaire
     if (
       interaction.type === InteractionType.ModalSubmit &&
       interaction.customId.startsWith('analyse_form')
@@ -94,7 +94,6 @@ client.on(Events.InteractionCreate, async interaction => {
       await interaction.deferReply({ ephemeral: true });
 
       const langue = interaction.customId.split(':')[1] || 'fr';
-
       const name = interaction.fields.getTextInputValue('project_name');
       const url = interaction.fields.getTextInputValue('project_url');
       const whitepaper = interaction.fields.getTextInputValue('whitepaper_url');
@@ -102,9 +101,8 @@ client.on(Events.InteractionCreate, async interaction => {
       const chain_id = 1;
 
       console.log("📨 Formulaire reçu:", {
-  name, url, whitepaper, address, langue, user: interaction.user.id
-});
-
+        name, url, whitepaper, address, langue, user: interaction.user.id
+      });
 
       let roles = [];
       let hasScoRageRole = false;
@@ -127,19 +125,19 @@ client.on(Events.InteractionCreate, async interaction => {
 
       const webhookURL = 'https://hook.eu2.make.com/v5cjhvkqc3q916sxesbnkiyr9f6qvnjr';
       console.log("🚀 Envoi à Make:", {
-  project_name: name,
-  project_url: url,
-  whitepaper_url: whitepaper,
-  contract_address: address,
-  chain_id,
-  language: langue,
-  guild_id: interaction.guildId,
-  user_id: interaction.user.id,
-  channel_id: interaction.channelId,
-  user_roles: roles
-});
+        project_name: name,
+        project_url: url,
+        whitepaper_url: whitepaper,
+        contract_address: address,
+        chain_id,
+        language: langue,
+        guild_id: interaction.guildId,
+        user_id: interaction.user.id,
+        channel_id: interaction.channelId,
+        user_roles: roles
+      });
 
-      await fetch.default(webhookURL, {
+      const res = await fetch.default(webhookURL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -158,8 +156,16 @@ client.on(Events.InteractionCreate, async interaction => {
           user_roles: roles
         })
       });
+
       const responseText = await res.text();
-      console.log("✅ Réponse Make:", res.status, await res.text());
+      console.log("✅ Réponse Make:", res.status, responseText);
+
+      if (!res.ok) {
+        await interaction.editReply({
+          content: `❌ Échec de l’analyse (code ${res.status}) : ${responseText}`
+        });
+        return;
+      }
 
       await interaction.editReply({
         content: `🧠 Analyse en cours pour **${name}**...`
@@ -168,14 +174,18 @@ client.on(Events.InteractionCreate, async interaction => {
 
   } catch (err) {
     console.error("❌ Erreur interaction :", {
-  message: err.message,
-  stack: err.stack
-});
+      message: err.message,
+      stack: err.stack
+    });
 
-    if (interaction.replied || interaction.deferred) {
-      await interaction.followUp({ content: 'Erreur interne.', flags: 64 });
-    } else {
-      await interaction.reply({ content: 'Erreur interne.', flags: 64 });
+    try {
+      if (interaction.replied || interaction.deferred) {
+        await interaction.followUp({ content: 'Erreur interne.', flags: 64 });
+      } else {
+        await interaction.reply({ content: 'Erreur interne.', flags: 64 });
+      }
+    } catch (e) {
+      console.error("❌ Erreur fallback :", e);
     }
   }
 });
