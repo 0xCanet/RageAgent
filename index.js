@@ -177,22 +177,21 @@ const steps = [
 
 let stepIndex = 0;
 
-// Affiche tout en "⏳" au début (rien validé)
-let status = steps.map((s, idx) =>
-  idx === 0 ? `⏳ ${s}` : `▫️ ${s}`
-).join('\n');
+// Affiche tout en "▫️" au début (rien validé)
+let status = steps.map(s => `▫️ ${s}`).join('\n');
 
 await interaction.editReply({
   content: `🧠 Analyse ScoRage™ en cours pour **${name}**...\n\n${status}`
 });
 
+// Stepper principal : valide chaque étape au fil de l’eau
 for (stepIndex = 0; stepIndex < steps.length; stepIndex++) {
-  await new Promise(res => setTimeout(res, 12000)); // 12s par step pour 1min total
+  await new Promise(res => setTimeout(res, 12000)); // 12s par step
 
   status = steps.map((s, idx) =>
-    idx < stepIndex + 1 ? `✅ ${s}` :
-    idx === stepIndex + 1 ? `⏳ ${steps[idx + 1] || ''}` : // Prochain step en cours
-    `▫️ ${s}`
+    idx < stepIndex    ? `✅ ${s}` :      // Fait
+    idx === stepIndex  ? `⏳ ${s}` :      // En cours
+    `▫️ ${s}`                           // À venir
   ).join('\n');
 
   await interaction.editReply({
@@ -204,6 +203,7 @@ for (stepIndex = 0; stepIndex < steps.length; stepIndex++) {
 await interaction.editReply({
   content: `✅ Analyse ScoRage™ terminée sur les 5 piliers !\n\nGénération du rapport PDF en cours...\n\n⏳ Cette étape peut prendre encore plusieurs dizaines de secondes selon le projet analysé. Merci de patienter !`
 });
+
 
     }
 
