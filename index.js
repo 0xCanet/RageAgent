@@ -167,7 +167,6 @@ client.on(Events.InteractionCreate, async interaction => {
         return;
       }
 
-
 const steps = [
   '1️⃣ Fundamentals',
   '2️⃣ Infra/Tokenomics',
@@ -176,35 +175,35 @@ const steps = [
   '5️⃣ Scam Signals'
 ];
 
-// Stepper visuel ~30 secondes (6000ms x 5 = 30 000ms)
 let stepIndex = 0;
-for (stepIndex = 1; stepIndex <= steps.length; stepIndex++) {
-  let status = steps.map((s, idx) =>
-    idx < stepIndex ? `✅ ${s}` :
-    idx === stepIndex ? `⏳ ${s}` :
+
+// Affiche tout en "⏳" au début (rien validé)
+let status = steps.map((s, idx) =>
+  idx === 0 ? `⏳ ${s}` : `▫️ ${s}`
+).join('\n');
+
+await interaction.editReply({
+  content: `🧠 Analyse ScoRage™ en cours pour **${name}**...\n\n${status}`
+});
+
+for (stepIndex = 0; stepIndex < steps.length; stepIndex++) {
+  await new Promise(res => setTimeout(res, 12000)); // 12s par step pour 1min total
+
+  status = steps.map((s, idx) =>
+    idx < stepIndex + 1 ? `✅ ${s}` :
+    idx === stepIndex + 1 ? `⏳ ${steps[idx + 1] || ''}` : // Prochain step en cours
     `▫️ ${s}`
   ).join('\n');
 
   await interaction.editReply({
     content: `🧠 Analyse ScoRage™ en cours pour **${name}**...\n\n${status}`
   });
-
-  await new Promise(res => setTimeout(res, 6000)); // 6s par étape, total ~30s
 }
 
-// Après le stepper (message attente réelle)
+// Message final (PDF en cours…)
 await interaction.editReply({
   content: `✅ Analyse ScoRage™ terminée sur les 5 piliers !\n\nGénération du rapport PDF en cours...\n\n⏳ Cette étape peut prendre encore plusieurs dizaines de secondes selon le projet analysé. Merci de patienter !`
 });
-
-// Quand le PDF est prêt, tu édites à nouveau :
-/*
-await interaction.editReply({
-  content: `🧠 Analyse ScoRage™ pour **${name}** terminée !\n\n${steps.map(s => `✅ ${s}`).join('\n')}\n\n📄 Rapport disponible ici : [Lien PDF]`
-});
-*/
-
-
 
     }
 
