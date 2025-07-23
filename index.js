@@ -91,7 +91,7 @@ client.on(Events.InteractionCreate, async interaction => {
       interaction.type === InteractionType.ModalSubmit &&
       interaction.customId.startsWith('analyse_form')
     ) {
-      await interaction.deferReply({ ephemeral: true });
+      await interaction.deferReply({ flags: 64 });
 
       const langue = interaction.customId.split(':')[1] || 'fr';
       const name = interaction.fields.getTextInputValue('project_name');
@@ -167,43 +167,46 @@ client.on(Events.InteractionCreate, async interaction => {
         return;
       }
 
-const steps = [
-  '1️⃣ Fundamentals',
-  '2️⃣ Infra/Tokenomics',
-  '3️⃣ Reputation',
-  '4️⃣ Engagement',
-  '5️⃣ Scam Signals'
-];
+      // --- STEPPER CORRIGÉ ---
+      const steps = [
+        '1️⃣ Fundamentals',
+        '2️⃣ Infra/Tokenomics',
+        '3️⃣ Reputation',
+        '4️⃣ Engagement',
+        '5️⃣ Scam Signals'
+      ];
 
-let stepIndex = 0;
+      let stepIndex = 0;
 
-// Affiche tout en "▫️" au début (rien validé)
-let status = steps.map(s => `▫️ ${s}`).join('\n');
+      // Affiche tout en "▫️" au début (rien validé)
+      let status = steps.map(s => `▫️ ${s}`).join('\n');
 
-await interaction.editReply({
-  content: `🧠 Analyse ScoRage™ en cours pour **${name}**...\n\n${status}`
-});
+      await interaction.editReply({
+        content: `🧠 Analyse ScoRage™ en cours pour **${name}**...\n\n${status}`
+      });
 
-// Stepper principal : valide chaque étape au fil de l’eau
-for (stepIndex = 0; stepIndex < steps.length; stepIndex++) {
-  await new Promise(res => setTimeout(res, 12000)); // 12s par step
+      // Stepper principal : valide chaque étape au fil de l’eau
+      for (stepIndex = 0; stepIndex < steps.length; stepIndex++) {
+        await new Promise(res => setTimeout(res, 12000)); // 12s par step
 
-  status = steps.map((s, idx) =>
-    idx < stepIndex    ? `✅ ${s}` :      // Fait
-    idx === stepIndex  ? `⏳ ${s}` :      // En cours
-    `▫️ ${s}`                           // À venir
-  ).join('\n');
+        status = steps.map((s, idx) =>
+          idx < stepIndex    ? `✅ ${s}` :      // Fait
+          idx === stepIndex  ? `⏳ ${s}` :      // En cours
+          `▫️ ${s}`                           // À venir
+        ).join('\n');
 
-  await interaction.editReply({
-    content: `🧠 Analyse ScoRage™ en cours pour **${name}**...\n\n${status}`
-  });
-}
+        // DEBUG stepper
+        console.log("DEBUG steps:", steps, "status:", status);
 
-// Message final (PDF en cours…)
-await interaction.editReply({
-  content: `✅ Analyse ScoRage™ terminée sur les 5 piliers !\n\nGénération du rapport PDF en cours...\n\n⏳ Cette étape peut prendre encore plusieurs dizaines de secondes selon le projet analysé. Merci de patienter !`
-});
+        await interaction.editReply({
+          content: `🧠 Analyse ScoRage™ en cours pour **${name}**...\n\n${status}`
+        });
+      }
 
+      // Message final (PDF en cours…)
+      await interaction.editReply({
+        content: `✅ Analyse ScoRage™ terminée sur les 5 piliers !\n\nGénération du rapport PDF en cours...\n\n⏳ Cette étape peut prendre encore plusieurs dizaines de secondes selon le projet analysé. Merci de patienter !`
+      });
 
     }
 
@@ -213,6 +216,7 @@ await interaction.editReply({
       stack: err.stack
     });
 
+    // PATCH double reply/unknown interaction
     try {
       if (interaction.replied || interaction.deferred) {
         await interaction.followUp({ content: 'Erreur interne.', flags: 64 });
@@ -220,7 +224,12 @@ await interaction.editReply({
         await interaction.reply({ content: 'Erreur interne.', flags: 64 });
       }
     } catch (e) {
-      console.error("❌ Erreur fallback :", e);
+      // Ne rien faire si déjà répondu ou interaction expirée
+      if (e.code === 40060 || e.code === 10062) {
+        console.warn("⚠️ Impossible de répondre à l’interaction (déjà répondu ou expirée).");
+      } else {
+        console.error("❌ Erreur fallback :", e);
+      }
     }
   }
 });
